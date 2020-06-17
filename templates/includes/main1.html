@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<form action="{% url 'data' %}" method="GET">
+        {% csrf_token %}
+        <select name="data" class="custom-select">
+            <option selected="">Выберите вариант</option>
+            <option>2019.10.01</option>
+            <option>2019.07.01</option>
+            <option>2019.04.01</option>
+            <option>2019.01.01</option>
+            <option>2020.01.01</option>
+            <option>2020.04.01</option>
+        </select>
+    <div class="col-0"><input style="" type="submit" value="Подтвердить" class="btn btn btn-secondary"></div>
+    </form>
+</body>
+</html>

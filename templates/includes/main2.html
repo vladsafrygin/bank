@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<p></p>
+<form action="{% url 'input_bank' %}" method="GET">
+        {% csrf_token %}
+    <input type="text" name="bank" placeholder="Введите название банка"><br>
+    <div class="col-0"><input style="" type="submit" value="Подтвердить" class="btn btn btn-thirdcondary"></div>
+    </form>
+</body>
+</html>
