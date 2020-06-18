@@ -6,5 +6,15 @@
 </head>
 <body>
 <h1>Отчетность по банку:{{bank}} загружена</h1>
+ <form action="{% url 'graphic' %}" method="GET">
+        {% csrf_token %}
+        <select name="graphic" class="custom-select">
+            <option selected="">Выберите показатель</option>
+            <option>Сумма в рублях</option>
+            <option>Сумма в иностранных валютах</option>
+            <option>Итоговая сумма</option>
+        </select>
+        <div class="col-0"><input style="" type="submit" value="Подтвердить" class="btn btn btn-secondary"></div>
+    </form>
 </body>
 </html>

@@ -97,15 +97,54 @@ def input_bank(request):
         bank_name = Post.objects.filter(NAME_B=request.GET.get("bank"))[0]
         if (request.method == "GET") and ('bank' in request.GET) and (
                 request.GET['bank'] == bank_name.NAME_B):
-            print('4444444444444444444444444444444444444444444444')
-            tabl.objects.create(text=bank_name.NAME_B)
-            print('555555555555555555555555555555555555555')
+            df = pd.DataFrame(columns=['NAME_B', 'SIM_R', 'SIM_V', 'SIM_ITOGO', 'REGN', 'DT'])
+            i = -1
+            for obj in Post.objects.filter(NAME_B=request.GET.get('bank')):
+                i += 1
+                df.loc[i, 'NAME_B'] = obj.NAME_B
+                df.loc[i, 'SIM_R'] = obj.SIM_R
+                df.loc[i, 'SIM_V'] = obj.SIM_V
+                df.loc[i, 'SIM_ITOGO'] = obj.SIM_ITOGO
+                df.loc[i, 'REGN'] = obj.REGN
+                df.loc[i, 'DT'] = obj.DT
+            df.to_excel('report.xls')
             return render(request, 'includes/main2_dop.html',
                           {'bank': str(request.GET['bank']), 'col_banks': decoding.values})
-    except Exception:
+    except Exception as e:
+        print(e)
         return render(request, 'includes/bank_not_found.html', {'bank': request.GET['bank']})
 
 
+def input_date(request):
+    try:
+        if request.method == 'GET' and 'date' in request.GET:
+            date = str(request.GET['date']).replace('.', '-')
+            filtered_by_date = Post.objects.filter(DT=date)
 
+            dataframe = pd.DataFrame(columns = ['NAME_B',
+                                                'SIM_R',
+                                                'SIM_V',
+                                                'SIM_ITOGO',
+                                                'REGN',
+                                                'DT'
+                                                ])
+            i = -1
+            for obj in filtered_by_date:
+                i += 1
+                dataframe.loc[i, 'NAME_B'] = obj.NAME_B
+                dataframe.loc[i, 'SIM_R'] = obj.SIM_R
+                dataframe.loc[i, 'SIM_V'] = obj.SIM_V
+                dataframe.loc[i, 'SIM_ITOGO'] = obj.SIM_ITOGO
+                dataframe.loc[i, 'REGN'] = obj.REGN
+                dataframe.loc[i, 'DT'] = obj.DT
+            dataframe.to_excel('report_by_date.xls')
+            return render(request, 'includes/main1_dop.html', {'date': date})
 
+    except Exception as e:
+        print('exception:', e)
+        return render(request, 'includes/date_not_found.html', {'date': request.GET['date']})
+
+def graphic(request):
+
+    return render()
 

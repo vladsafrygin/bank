@@ -30,5 +30,7 @@ urlpatterns = [
     path('upload-csv/', profile_upload, name="profile_upload"),
     url(r'^choises/', views.choises, name='choises'),
     url(r'^input_bank/', views.input_bank, name='input_bank'),
+    url(r'^input_date/', views.input_date, name='input_date'),
+    url(r'^graphic/', views.graphic, name='graphic'),
     url(r'^bank-autocomplete/$', BankAutocomplete.as_view(), name='bank-autocomplete'),
 ]

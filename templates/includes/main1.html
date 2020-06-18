@@ -5,9 +5,9 @@
     <title>Title</title>
 </head>
 <body>
-<form action="{% url 'datas' %}" method="GET">
+<form action="{% url 'input_date' %}" method="GET">
         {% csrf_token %}
-        <select name="data" class="custom-select">
+        <select name="date" class="custom-select">
             <option selected="">Выберите вариант</option>
             <option>2019.10.01</option>
             <option>2019.07.01</option>
