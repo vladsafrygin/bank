@@ -3,11 +3,6 @@ import io
 import pickle
 from audioop import reverse
 from tokenize import Comment
-
-from xlrd.timemachine import xrange
-from xlutils.copy import copy
-from xlrd import open_workbook
-import xlwt
 from django.http import HttpResponse
 import os
 from django.contrib import messages
@@ -33,6 +28,13 @@ class BankAutocomplete(autocomplete.Select2QuerySetView):
 
 
 def profile_upload(request):
+    """
+    Автор:
+    Цель:
+
+    :param request:
+    :return: рендер шаблона
+    """
     # declaring template
     template = "profile_upload.html"
     data = Post.objects.all()
@@ -66,7 +68,13 @@ def profile_upload(request):
 
 
 def choises(request):
-    results: object = request.GET["choises"]
+    """
+    Автор: Сафрыгин Владислав
+    Цель: передать значение выбора пользователя по виду отчета
+    :param request:
+    :return: рендер шаблона 'index.html', словарь с выбранным типом отчета и списком банков
+    """
+    results = request.GET.get("choises")
     bank_list = Post.objects.all()
     return render(request, 'index.html', {'choises': results, 'bank': '', 'bank_list': bank_list})
 
@@ -80,28 +88,24 @@ def choises(request):
 
 
 def input_bank(request):
+    """
+
+    :param request:
+    :return:
+    """
     try:
-        bank_name = Post.objects.get(NAME_B=request.get("bank"))
-        print(request.GET)
+        bank_name = Post.objects.filter(NAME_B=request.GET.get("bank"))[0]
         if (request.method == "GET") and ('bank' in request.GET) and (
                 request.GET['bank'] == bank_name.NAME_B):
-            tabl.objects.create(data=bank_name.NAME_B)
-            return render(request, 'includes/dopmain2.html',
-                          {'bank': str(request.GET['bank']), 'col_banks': decoding.values()})
+            print('4444444444444444444444444444444444444444444444')
+            tabl.objects.create(text=bank_name.NAME_B)
+            print('555555555555555555555555555555555555555')
+            return render(request, 'includes/main2_dop.html',
+                          {'bank': str(request.GET['bank']), 'col_banks': decoding.values})
     except Exception:
         return render(request, 'includes/bank_not_found.html', {'bank': request.GET['bank']})
 
 
-def data(request):
-    try:
-        bank_name = Post.objects.get(NAME_B=request.get("banks"))
-        if (request.method == "GET") and ('bank' in request.GET) and (
-                request.GET['banks'] == bank_name.NAME_B):
-            tabl.objects.create(data=bank_name.NAME_B)
-            return render(request, 'includes/main2_dop.html',
-                          {'banks': str(request.GET['bank']), 'col_banks': decoding.values()})
-    except Exception:
-        return render(request, 'includes/bank_not_found.html', {'banks': request.GET['bank']})
 
 
 
