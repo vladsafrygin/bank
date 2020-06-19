@@ -33,4 +33,5 @@ urlpatterns = [
     url(r'^input_date/', views.input_date, name='input_date'),
     url(r'^graphic/', views.graphic, name='graphic'),
     url(r'^bank-autocomplete/$', BankAutocomplete.as_view(), name='bank-autocomplete'),
+    url(r'^my_image/', views.my_image, name='my_image'),
 ]

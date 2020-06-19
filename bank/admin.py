@@ -13,4 +13,4 @@ class form(forms.ModelForm):
         widgets = {'bank': autocomplete.ModelSelect2(url='bank-autocomplete')}
 
 
-admin.site.register(Post)
+admin.site.register(Post, PostAdmin)

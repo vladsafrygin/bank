@@ -1,16 +1,14 @@
 import csv
 import io
-import pickle
 from audioop import reverse
 from tokenize import Comment
 from django.http import HttpResponse
-import os
 from django.contrib import messages
 from django.shortcuts import render
-from django.http import HttpResponseRedirect
-from .models import Post, tabl, decoding
+from .models import Post, decoding
 import pandas as pd
 from dal import autocomplete
+import matplotlib.pyplot as plt
 
 
 def index(request):
@@ -86,6 +84,8 @@ def choises(request):
 # return render(request, 'includes/dopmain2.html',
 #           {'input_name': results1, 'bank': '', 'bank_one': bank_one})
 
+df = pd.DataFrame(columns=['NAME_B', 'SIM_R', 'SIM_V', 'SIM_ITOGO', 'REGN', 'DT'])
+
 
 def input_bank(request):
     """
@@ -97,7 +97,6 @@ def input_bank(request):
         bank_name = Post.objects.filter(NAME_B=request.GET.get("bank"))[0]
         if (request.method == "GET") and ('bank' in request.GET) and (
                 request.GET['bank'] == bank_name.NAME_B):
-            df = pd.DataFrame(columns=['NAME_B', 'SIM_R', 'SIM_V', 'SIM_ITOGO', 'REGN', 'DT'])
             i = -1
             for obj in Post.objects.filter(NAME_B=request.GET.get('bank')):
                 i += 1
@@ -116,18 +115,23 @@ def input_bank(request):
 
 
 def input_date(request):
+    """
+
+    :param request:
+    :return:
+    """
     try:
         if request.method == 'GET' and 'date' in request.GET:
             date = str(request.GET['date']).replace('.', '-')
             filtered_by_date = Post.objects.filter(DT=date)
 
-            dataframe = pd.DataFrame(columns = ['NAME_B',
-                                                'SIM_R',
-                                                'SIM_V',
-                                                'SIM_ITOGO',
-                                                'REGN',
-                                                'DT'
-                                                ])
+            dataframe = pd.DataFrame(columns=['NAME_B',
+                                              'SIM_R',
+                                              'SIM_V',
+                                              'SIM_ITOGO',
+                                              'REGN',
+                                              'DT'
+                                              ])
             i = -1
             for obj in filtered_by_date:
                 i += 1
@@ -144,7 +148,32 @@ def input_date(request):
         print('exception:', e)
         return render(request, 'includes/date_not_found.html', {'date': request.GET['date']})
 
+
 def graphic(request):
+    """
 
-    return render()
+    :param request:
+    :return:
+    """
+    results = request.GET.get("graphic")
+    plt.ioff()
+    if results =='Сумма в рублях':
+        df.plot(kind = 'line', y = 'SIM_R', x ='DT')
+        plt.savefig('main2_dop.png')
+    elif results == 'Сумма в иностранных валютах':
+        df.plot(kind='line', y = 'SIM_V', x ='DT')
+        plt.savefig('includes/main2_dop.png')
+    elif results == 'Итоговая сумма':
+        df.plot(kind='line', y = 'SIM_ITOGO', x ='DT')
+        plt.savefig('includes/main2_dop.png')
+    return render(request, 'includes/graphic.html')
 
+
+def my_image(request):
+    """
+
+    :param request:
+    :return:
+    """
+    image_data = open("main2_dop.png", "rb").read()
+    return HttpResponse(image_data, content_type="image/png")

@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<form action="{% url 'my_image' %}" method="GET">
+        {% csrf_token %}
+    <div class="col-0"><input style="" type="submit" value="Загрузить график" class="btn btn btn-secondary"></div>
+    </form>
+</body>
+</html>
