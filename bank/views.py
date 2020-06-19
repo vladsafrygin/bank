@@ -9,6 +9,9 @@ from .models import Post, decoding
 import pandas as pd
 from dal import autocomplete
 import matplotlib.pyplot as plt
+from bs4 import BeautifulSoup
+import requests
+import re
 
 
 def index(request):
@@ -63,6 +66,32 @@ def profile_upload(request):
         )
     context = {}
     return render(request, template, context)
+
+
+def new_report(request):
+    """
+
+    :param request:
+    :return:
+    """
+    try:
+        button = request.GET.get("new_report")
+        result = requests.get('https://cbr.ru/banking_sector/otchetnost-kreditnykh-organizac..')
+        html = result.text
+        soup = BeautifulSoup(html)
+        s = soup.find('div', class_="versions_items _active")
+        print(s)
+        print('5')
+        s = str(s)
+        print(s)
+        result = re.findall(r'\d{2}.\d{2}', s)
+        print(result)
+        itog = 'yes'
+        return render(request, 'index.html', {'itog': itog})
+    except Exception as e:
+        print(e)
+        itog = 'not'
+        return render(request, 'index.html', {'itog':itog})
 
 
 def choises(request):
@@ -157,15 +186,15 @@ def graphic(request):
     """
     results = request.GET.get("graphic")
     plt.ioff()
-    if results =='Сумма в рублях':
-        df.plot(kind = 'line', y = 'SIM_R', x ='DT')
+    if results == 'Сумма в рублях':
+        df.plot(kind='line', y='SIM_R', x='DT')
         plt.savefig('main2_dop.png')
     elif results == 'Сумма в иностранных валютах':
-        df.plot(kind='line', y = 'SIM_V', x ='DT')
-        plt.savefig('includes/main2_dop.png')
+        df.plot(kind='line', y='SIM_V', x='DT')
+        plt.savefig('main2_dop.png')
     elif results == 'Итоговая сумма':
-        df.plot(kind='line', y = 'SIM_ITOGO', x ='DT')
-        plt.savefig('includes/main2_dop.png')
+        df.plot(kind='line', y='SIM_ITOGO', x='DT')
+        plt.savefig('main2_dop.png')
     return render(request, 'includes/graphic.html')
 
 
