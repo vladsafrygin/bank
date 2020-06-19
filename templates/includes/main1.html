@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" xmlns="http://www.w3.org/1999/html">
 <head>
     <meta charset="UTF-8">
     <title>Title</title>
 </head>
-<body>
+<br>
 <form action="{% url 'input_date' %}" method="GET">
         {% csrf_token %}
         <select name="date" class="custom-select">
@@ -18,5 +18,7 @@
         </select>
     <div class="col-0"><input style="" type="submit" value="Подтвердить" class="btn btn btn-secondary"></div>
     </form>
+<br></br>
+<input type="button" onclick="history.back();" value="Назад">
 </body>
 </html>

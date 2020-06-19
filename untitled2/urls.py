@@ -24,6 +24,10 @@ from django.conf.urls.static import static
 from bank.views import BankAutocomplete
 
 app_name = 'app_first_test'
+"""
+Автор: Сафрыгин Владислав
+Цель: регистрация всех функций, запускающихся при вводе пользователя
+"""
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include('bank.urls')),
@@ -35,4 +39,5 @@ urlpatterns = [
     url(r'^bank-autocomplete/$', BankAutocomplete.as_view(), name='bank-autocomplete'),
     url(r'^new_report/', views.new_report, name='new_report'),
     url(r'^my_image/', views.my_image, name='my_image'),
+    url(r'^parser/', views.parser, name='parser'),
 ]

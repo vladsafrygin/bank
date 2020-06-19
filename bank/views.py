@@ -1,24 +1,36 @@
 import csv
 import io
+import sys
 from audioop import reverse
 from tokenize import Comment
 from django.http import HttpResponse
 from django.contrib import messages
 from django.shortcuts import render
-from .models import Post, decoding
+from .models import Post
 import pandas as pd
 from dal import autocomplete
 import matplotlib.pyplot as plt
 from bs4 import BeautifulSoup
 import requests
 import re
+from dbfread import DBF
 
 
 def index(request):
+    """
+    Автор: Козлов Даниил
+    Цель: подключить основную html страницу
+    :param request:
+    :return: рендер шаблона 'index.html'
+    """
     return render(request, 'index.html')
 
 
 class BankAutocomplete(autocomplete.Select2QuerySetView):
+    """
+    Автор:
+    Цель:
+    """
     def get_queryset(self):
         if not self.request.user.is_authenticated():
             return Post.objects.none()
@@ -30,8 +42,8 @@ class BankAutocomplete(autocomplete.Select2QuerySetView):
 
 def profile_upload(request):
     """
-    Автор:
-    Цель:
+    Автор: Козлов Даниил
+    Цель: Загрузка БД
 
     :param request:
     :return: рендер шаблона
@@ -70,28 +82,83 @@ def profile_upload(request):
 
 def new_report(request):
     """
-
+    Автор: Козлов Даниил
+    Цель: проверить наличие новой отчетности
     :param request:
-    :return:
+    :return: в зависимости от наличия новой отчености возвращает рендер шаблона, а также показатель ее наличия
     """
     try:
         button = request.GET.get("new_report")
-        result = requests.get('https://cbr.ru/banking_sector/otchetnost-kreditnykh-organizac..')
+        result = requests.get('https://cbr.ru/banking_sector/otchetnost-kreditnykh-organizaciy/')
         html = result.text
-        soup = BeautifulSoup(html)
-        s = soup.find('div', class_="versions_items _active")
-        print(s)
-        print('5')
+        soup = BeautifulSoup(html, 'html.parser')
+        s = soup.select("div")[158].get_text()
         s = str(s)
-        print(s)
-        result = re.findall(r'\d{2}.\d{2}', s)
-        print(result)
-        itog = 'yes'
+        result = re.findall(r'\d{2}\.\d{2}', s)
+        if result[0] == '01.04':
+            itog = 'not'
         return render(request, 'index.html', {'itog': itog})
     except Exception as e:
         print(e)
-        itog = 'not'
-        return render(request, 'index.html', {'itog':itog})
+        itog = 'yes'
+        return render(request, 'includes/index_new_report.html', {'itog': itog})
+
+
+def parser(request):
+    """
+    Автор:Козлов Даниил
+    Цель: Обновление БД
+    :param request:
+    :return: обновленную базу данных в фромате DataFrame
+    """
+    result = requests.get('https://cbr.ru/banking_sector/otchetnost-kreditnykh-organizaciy/')
+    html = result.text
+    soup = BeautifulSoup(html)
+    # читаем старую базу данных (в CSV)
+    data = pd.read_csv('BD.csv')
+    # парсинг сайта ЦБ, находим, есть ли данные на определённый период времени, если нет, то s == []
+    s2 = soup.find_all('a', href="/vfs/credit/forms/102-20200401.rar")
+    s1 = soup.find_all('a', href="/vfs/credit/forms/102-20200101.rar")
+    s3 = soup.find_all('a', href="/vfs/credit/forms/102-20200701.rar")
+    s4 = soup.find_all('a', href="/vfs/credit/forms/102-20201001.rar")
+    if s1 == []:
+        print('Нет данных на 01.01 2020')
+    elif s2 == []:
+        print('Нет данных на 04.01 2020')
+    elif s3 == []:
+        print('Нет данных на 07.01 2020')
+        # Выгружаем данные за прошлый период времени
+        # Необходимо скачать rar архив с сайта ЦБ по ссылке https://cbr.ru/vfs/credit/forms/102-20200401.rar
+        # и распаковать оттуда два файла NP1 и P1
+        table1 = DBF('22020NP1.DBF', load=True, encoding='cp866')
+        frame1 = pd.DataFrame(iter(table1))
+        table2 = DBF('22020_P1.DBF', load=True, encoding='cp866')
+        frame2 = pd.DataFrame(iter(table2))
+        frame2 = frame2.fillna(0)
+        result = pd.merge(frame1, frame2, on='REGN')
+        new = result.groupby(['NAME_B']).sum().reset_index()
+        new = new.drop(['REGN'], axis=1)
+        new_result = pd.merge(new, frame1, on='NAME_B')
+        new_result['DT'] = '2020-04-01'
+        final = pd.concat([new_result, data], ignore_index=True)
+        final.to_csv('BD.csv')
+    elif s4 == []:
+        # Необходимо скачать rar архив с сайта ЦБ по ссылке https://cbr.ru/vfs/credit/forms/102-20200701.rar
+        # и распаковать оттуда два файла NP1 и P1
+        print('Нет данных на 10.01 2020')
+        table1 = DBF('32020NP1.DBF', load=True, encoding='cp866')
+        frame1 = pd.DataFrame(iter(table1))
+        table2 = DBF('32020_P1.DBF', load=True, encoding='cp866')
+        frame2 = pd.DataFrame(iter(table2))
+        frame2 = frame2.fillna(0)
+        result = pd.merge(frame1, frame2, on='REGN')
+        new = result.groupby(['NAME_B']).sum().reset_index()
+        new = new.drop(['REGN'], axis=1)
+        new_result = pd.merge(new, frame1, on='NAME_B')
+        new_result['DT'] = '2020-07-01'
+        final = pd.concat([new_result, data], ignore_index=True)
+        final.to_csv('BD.csv')
+    return final
 
 
 def choises(request):
@@ -103,6 +170,7 @@ def choises(request):
     """
     results = request.GET.get("choises")
     bank_list = Post.objects.all()
+    print(results)
     return render(request, 'index.html', {'choises': results, 'bank': '', 'bank_list': bank_list})
 
 
@@ -118,9 +186,10 @@ df = pd.DataFrame(columns=['NAME_B', 'SIM_R', 'SIM_V', 'SIM_ITOGO', 'REGN', 'DT'
 
 def input_bank(request):
     """
-
+    Автор: Сафрыгин Владислав
+    Цель: Получения названия банка, проверка наличия такого в БД, загрузка отчета по банку в случае наличия
     :param request:
-    :return:
+    :return: рендер нужного шаблона в зависимости от наличия банка в БД, название введенного пользователем банка
     """
     try:
         bank_name = Post.objects.filter(NAME_B=request.GET.get("bank"))[0]
@@ -137,7 +206,7 @@ def input_bank(request):
                 df.loc[i, 'DT'] = obj.DT
             df.to_excel('report.xls')
             return render(request, 'includes/main2_dop.html',
-                          {'bank': str(request.GET['bank']), 'col_banks': decoding.values})
+                          {'bank': str(request.GET['bank'])})
     except Exception as e:
         print(e)
         return render(request, 'includes/bank_not_found.html', {'bank': request.GET['bank']})
@@ -145,9 +214,10 @@ def input_bank(request):
 
 def input_date(request):
     """
-
+    Автор: Сафрыгин Владислав
+    Цель: загрузка отчета по всем банкам за определенную дату
     :param request:
-    :return:
+    :return: рендер нужного шаблона в зависимости от резульата, выбранная пользователем дата
     """
     try:
         if request.method == 'GET' and 'date' in request.GET:
@@ -180,9 +250,10 @@ def input_date(request):
 
 def graphic(request):
     """
-
+    Автор: Сафрыгин Владислав
+    Цель: Построить график на основе показателя выбранного пользователем
     :param request:
-    :return:
+    :return: рендер шаблона 'graphic,html'
     """
     results = request.GET.get("graphic")
     plt.ioff()
@@ -200,7 +271,8 @@ def graphic(request):
 
 def my_image(request):
     """
-
+    Автор: Сафрыгин Владислав
+    Цель: Вывод графика пользователю
     :param request:
     :return:
     """

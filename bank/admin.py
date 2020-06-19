@@ -3,6 +3,11 @@ from .models import Post
 from dal import autocomplete
 from django import forms
 
+"""
+Автор: Козлов Даниил
+Цель: регистрация классов в админ-панели
+"""
+
 
 class PostAdmin(admin.ModelAdmin):
     model = Post
