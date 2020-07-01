@@ -21,7 +21,7 @@ from bank import views
 from bank.views import profile_upload
 from django.conf import settings
 from django.conf.urls.static import static
-from bank.views import BankAutocomplete
+
 
 app_name = 'app_first_test'
 """
@@ -36,7 +36,6 @@ urlpatterns = [
     url(r'^input_bank/', views.input_bank, name='input_bank'),
     url(r'^input_date/', views.input_date, name='input_date'),
     url(r'^graphic/', views.graphic, name='graphic'),
-    url(r'^bank-autocomplete/$', BankAutocomplete.as_view(), name='bank-autocomplete'),
     url(r'^new_report/', views.new_report, name='new_report'),
     url(r'^my_image/', views.my_image, name='my_image'),
     url(r'^parser/', views.parser, name='parser'),

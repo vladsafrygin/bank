@@ -2,18 +2,17 @@ import csv
 import io
 import sys
 from audioop import reverse
-from tokenize import Comment
 from django.http import HttpResponse
 from django.contrib import messages
 from django.shortcuts import render
 from .models import Post
 import pandas as pd
-from dal import autocomplete
 import matplotlib.pyplot as plt
 from bs4 import BeautifulSoup
 import requests
 import re
 from dbfread import DBF
+from time import localtime, strftime
 
 
 def index(request):
@@ -26,18 +25,6 @@ def index(request):
     return render(request, 'index.html')
 
 
-class BankAutocomplete(autocomplete.Select2QuerySetView):
-    """
-    Автор:
-    Цель:
-    """
-    def get_queryset(self):
-        if not self.request.user.is_authenticated():
-            return Post.objects.none()
-        qs = Post.objects.all()
-        if self.q:
-            qs = qs.filter(title__istartswith=self.q)
-        return qs
 
 
 def profile_upload(request):
@@ -69,12 +56,14 @@ def profile_upload(request):
     next(io_string)
     for column in csv.reader(io_string, delimiter=';', quotechar="|"):
         _, created = Post.objects.update_or_create(
-            NAME_B=column[0],
-            SIM_R=column[1],
-            SIM_V=column[2],
-            SIM_ITOGO=column[3],
-            REGN=column[4],
-            DT=column[5],
+            Number=column[0],
+            REGN=column[1],
+            NAME_B=column[2],
+            ROOT=column[3],
+            SIM_R=column[4],
+            SIM_V=column[5],
+            SIM_ITOGO=column[6],
+            DT=column[7],
         )
     context = {}
     return render(request, template, context)
@@ -184,6 +173,7 @@ def choises(request):
 df = pd.DataFrame(columns=['NAME_B', 'SIM_R', 'SIM_V', 'SIM_ITOGO', 'REGN', 'DT'])
 
 
+
 def input_bank(request):
     """
     Автор: Сафрыгин Владислав
@@ -191,6 +181,7 @@ def input_bank(request):
     :param request:
     :return: рендер нужного шаблона в зависимости от наличия банка в БД, название введенного пользователем банка
     """
+    global bank_name
     try:
         bank_name = Post.objects.filter(NAME_B=request.GET.get("bank"))[0]
         if (request.method == "GET") and ('bank' in request.GET) and (
@@ -198,13 +189,16 @@ def input_bank(request):
             i = -1
             for obj in Post.objects.filter(NAME_B=request.GET.get('bank')):
                 i += 1
+                df.loc[i, 'ROOT'] = obj.ROOT
                 df.loc[i, 'NAME_B'] = obj.NAME_B
                 df.loc[i, 'SIM_R'] = obj.SIM_R
                 df.loc[i, 'SIM_V'] = obj.SIM_V
                 df.loc[i, 'SIM_ITOGO'] = obj.SIM_ITOGO
                 df.loc[i, 'REGN'] = obj.REGN
                 df.loc[i, 'DT'] = obj.DT
-            df.to_excel('report.xls')
+            tm_struct = localtime()
+            filename = 'report_one_bank_' + strftime('%Y_%m_%d_%H_%M_%S', tm_struct) + '.xls'
+            df.to_excel(filename)
             return render(request, 'includes/main2_dop.html',
                           {'bank': str(request.GET['bank'])})
     except Exception as e:
@@ -234,13 +228,16 @@ def input_date(request):
             i = -1
             for obj in filtered_by_date:
                 i += 1
+                dataframe.loc[i, 'ROOT'] = obj.ROOT
                 dataframe.loc[i, 'NAME_B'] = obj.NAME_B
                 dataframe.loc[i, 'SIM_R'] = obj.SIM_R
                 dataframe.loc[i, 'SIM_V'] = obj.SIM_V
                 dataframe.loc[i, 'SIM_ITOGO'] = obj.SIM_ITOGO
                 dataframe.loc[i, 'REGN'] = obj.REGN
                 dataframe.loc[i, 'DT'] = obj.DT
-            dataframe.to_excel('report_by_date.xls')
+            tm_struct = localtime()
+            filename = 'report_by_date_' + strftime('%Y_%m_%d_%H_%M_%S', tm_struct) + '.xls'
+            dataframe.to_excel(filename)
             return render(request, 'includes/main1_dop.html', {'date': date})
 
     except Exception as e:
@@ -255,18 +252,31 @@ def graphic(request):
     :param request:
     :return: рендер шаблона 'graphic,html'
     """
-    results = request.GET.get("graphic")
-    plt.ioff()
-    if results == 'Сумма в рублях':
-        df.plot(kind='line', y='SIM_R', x='DT')
+    try:
+        code = Post.objects.filter(ROOT=request.GET.get("graphic"), NAME_B=bank_name.NAME_B)[0]
+        codes = Post.objects.filter(ROOT=request.GET.get("graphic"), NAME_B=bank_name.NAME_B)
+        plt.ioff()
+        i = -1
+        dataframe1 = pd.DataFrame(columns=['NAME_B',
+                                          'SIM_R',
+                                          'SIM_V',
+                                          'SIM_ITOGO',
+                                          'REGN',
+                                          'DT'
+                                          ])
+        for obj in codes:
+            i += 1
+            dataframe1.loc[i, 'SIM_ITOGO'] = obj.SIM_ITOGO
+            dataframe1.loc[i, 'DT'] = obj.DT
+        if dataframe1.shape[0] > 1:
+            dataframe1.plot(kind='line', y='SIM_ITOGO', x='DT')
+        elif dataframe1.shape[0] == 1:
+            dataframe1.plot(kind='scatter', y='SIM_ITOGO', x='DT')
         plt.savefig('main2_dop.png')
-    elif results == 'Сумма в иностранных валютах':
-        df.plot(kind='line', y='SIM_V', x='DT')
-        plt.savefig('main2_dop.png')
-    elif results == 'Итоговая сумма':
-        df.plot(kind='line', y='SIM_ITOGO', x='DT')
-        plt.savefig('main2_dop.png')
-    return render(request, 'includes/graphic.html')
+        return render(request, 'includes/graphic.html', {'code': code.ROOT})
+    except Exception as e:
+        print(e)
+        return render(request, 'includes/date_not_found.html', {'code': code.ROOT})
 
 
 def my_image(request):
