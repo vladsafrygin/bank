@@ -39,4 +39,5 @@ urlpatterns = [
     url(r'^new_report/', views.new_report, name='new_report'),
     url(r'^my_image/', views.my_image, name='my_image'),
     url(r'^parser/', views.parser, name='parser'),
+    url(r'^new_database/', views.new_database, name='new_database'),
 ]

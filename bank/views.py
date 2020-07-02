@@ -1,6 +1,6 @@
 import csv
 import io
-import sys
+import sys, traceback
 from audioop import reverse
 from django.http import HttpResponse
 from django.contrib import messages
@@ -13,7 +13,7 @@ import requests
 import re
 from dbfread import DBF
 from time import localtime, strftime
-
+import xlwt
 
 def index(request):
     """
@@ -23,8 +23,6 @@ def index(request):
     :return: рендер шаблона 'index.html'
     """
     return render(request, 'index.html')
-
-
 
 
 def profile_upload(request):
@@ -92,6 +90,26 @@ def new_report(request):
         itog = 'yes'
         return render(request, 'includes/index_new_report.html', {'itog': itog})
 
+
+def new_database(request):
+    csv_file = 'bank/BD1.csv'
+    with open(csv_file) as f:
+        data_set = f.read()
+    io_string = io.StringIO(data_set)
+    next(io_string)
+    for column in csv.reader(io_string, delimiter=';', quotechar="|"):
+        _, created = Post.objects.update_or_create(
+            Number=column[0],
+            REGN=column[1],
+            NAME_B=column[2],
+            ROOT=column[3],
+            SIM_R=column[4],
+            SIM_V=column[5],
+            SIM_ITOGO=column[6],
+            DT=column[7],
+        )
+    context = {}
+    return render(request, 'index.html', context)
 
 def parser(request):
     """
@@ -173,7 +191,6 @@ def choises(request):
 df = pd.DataFrame(columns=['NAME_B', 'SIM_R', 'SIM_V', 'SIM_ITOGO', 'REGN', 'DT'])
 
 
-
 def input_bank(request):
     """
     Автор: Сафрыгин Владислав
@@ -203,6 +220,7 @@ def input_bank(request):
                           {'bank': str(request.GET['bank'])})
     except Exception as e:
         print(e)
+        traceback.print_exc(file=sys.stdout)
         return render(request, 'includes/bank_not_found.html', {'bank': request.GET['bank']})
 
 
@@ -258,12 +276,12 @@ def graphic(request):
         plt.ioff()
         i = -1
         dataframe1 = pd.DataFrame(columns=['NAME_B',
-                                          'SIM_R',
-                                          'SIM_V',
-                                          'SIM_ITOGO',
-                                          'REGN',
-                                          'DT'
-                                          ])
+                                           'SIM_R',
+                                           'SIM_V',
+                                           'SIM_ITOGO',
+                                           'REGN',
+                                           'DT'
+                                           ])
         for obj in codes:
             i += 1
             dataframe1.loc[i, 'SIM_ITOGO'] = obj.SIM_ITOGO
@@ -276,7 +294,7 @@ def graphic(request):
         return render(request, 'includes/graphic.html', {'code': code.ROOT})
     except Exception as e:
         print(e)
-        return render(request, 'includes/date_not_found.html', {'code': code.ROOT})
+        return render(request, 'includes/date_not_found.html')
 
 
 def my_image(request):

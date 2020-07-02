@@ -17,4 +17,4 @@ class Post(models.Model):
     DT = models.DateField(default=2019 / 10 / 12)
 
     def str(self):
-        return self.title
+        return self.NAME_B

@@ -15,7 +15,7 @@
     <link rel="stylesheet" type="text/css" href="style.css">
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css">
 </head>
-<html>
+<br>
     <div class="py-5 text-center">
         <h2>Банковское приложение</h2>
         <p class="lead">Пробная версия банковского приложения.</p>
@@ -44,6 +44,12 @@
     <form action="{% url 'new_report' %}" method="GET">
         {% csrf_token %}
         <div class="col-0"><input style="" type="submit" value="Проверить актуальность банковской отчетности" name="new_report" class="btn btn btn-secondary"></div>
+    </form>
+    <br></br>
+    <br></br>
+    <form action="{% url 'new_database' %}" method="GET">
+        {% csrf_token %}
+        <div class="col-0"><input style="" type="submit" value="Загрузить базу данных" name="new_database" class="btn btn btn-secondary"></div>
     </form>
     {% if itog == 'not' %}
         <h1>Отчётность по банкам актуальна</h1>
