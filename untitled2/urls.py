@@ -40,4 +40,5 @@ urlpatterns = [
     url(r'^my_image/', views.my_image, name='my_image'),
     url(r'^parser/', views.parser, name='parser'),
     url(r'^new_database/', views.new_database, name='new_database'),
+    url(r'^list_of_banks/', views.list_of_banks, name='list_of_banks'),
 ]

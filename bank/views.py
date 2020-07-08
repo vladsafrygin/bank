@@ -14,6 +14,8 @@ import re
 from dbfread import DBF
 from time import localtime, strftime
 import xlwt
+from tqdm import tqdm
+
 
 def index(request):
     """
@@ -33,26 +35,30 @@ def profile_upload(request):
     :param request:
     :return: рендер шаблона
     """
+    print('11111111111111111111111111')
     # declaring template
     template = "profile_upload.html"
     data = Post.objects.all()
+    print('222222222222222222222222')
     # prompt is a context variable that can have different values      depending on their context
-    prompt = {
-        'order': 'Order of the CSV should be name, email, address,    phone, profile',
-        'profiles': data
-    }
     # GET request returns the value of the data with the specified key.
     if request.method == "GET":
-        return render(request, template, prompt)
+        return render(request, template)
+    print('333333333333333333333333333333333333333')
     csv_file = request.FILES['file']
+    print('4444444444444444444444444444444444444444444444444')
     # let's check if it is a csv file
     if not csv_file.name.endswith('.csv'):
         messages.error(request, 'THIS IS NOT A CSV FILE')
+    print('55555555555555555555555555555555')
     data_set = csv_file.read().decode('cp1251')
+    print(data_set.count('\n'))
     # setup a stream which is when we loop through each line we are able to handle a data in a stream
     io_string = io.StringIO(data_set)
     next(io_string)
-    for column in csv.reader(io_string, delimiter=';', quotechar="|"):
+    y = 1
+    j = 0
+    for column in tqdm(csv.reader(io_string, delimiter=';', quotechar="|")):
         _, created = Post.objects.update_or_create(
             Number=column[0],
             REGN=column[1],
@@ -63,8 +69,9 @@ def profile_upload(request):
             SIM_ITOGO=column[6],
             DT=column[7],
         )
-    context = {}
-    return render(request, template, context)
+        j += 1
+    context = {'index': j}
+    return render(request, 'index.html', context, {'flag': y})
 
 
 def new_report(request):
@@ -82,13 +89,37 @@ def new_report(request):
         s = soup.select("div")[158].get_text()
         s = str(s)
         result = re.findall(r'\d{2}\.\d{2}', s)
+        obj = Post.objects.all()[0]
+        r_name = obj.NAME_B
+        qr_dates = Post.objects.filter(NAME_B=r_name)
+        datess = []
+        for record in qr_dates:
+            if str(record.DT) not in datess:
+                datess.append(str(record.DT))
         if result[0] == '01.04':
             itog = 'not'
-        return render(request, 'index.html', {'itog': itog})
+        return render(request, 'index.html', {'itog': itog, 'datess': datess})
     except Exception as e:
         print(e)
         itog = 'yes'
         return render(request, 'includes/index_new_report.html', {'itog': itog})
+
+codes = []
+
+def list_of_banks(request):
+    try:
+        f = 1
+        obj = Post.objects.all()[0]
+        r_date = obj.DT
+        qr_banks = Post.objects.filter(DT=r_date)
+        bankes = []
+        for record in qr_banks:
+            if str(record.NAME_B) not in bankes:
+                bankes.append(str(record.NAME_B))
+        return render(request, 'index.html', {'result': f, 'bankes': bankes})
+    except Exception as e:
+        print(e)
+        return render(request, 'includes/index_new_report.html', {'rort': f})
 
 
 def new_database(request):
@@ -96,8 +127,7 @@ def new_database(request):
     with open(csv_file) as f:
         data_set = f.read()
     io_string = io.StringIO(data_set)
-    next(io_string)
-    for column in csv.reader(io_string, delimiter=';', quotechar="|"):
+    for column in tqdm(csv.reader(io_string, delimiter=';', quotechar="|"), total=data_set.count('\n') - 1):
         _, created = Post.objects.update_or_create(
             Number=column[0],
             REGN=column[1],
@@ -110,6 +140,7 @@ def new_database(request):
         )
     context = {}
     return render(request, 'index.html', context)
+
 
 def parser(request):
     """
@@ -216,8 +247,13 @@ def input_bank(request):
             tm_struct = localtime()
             filename = 'report_one_bank_' + strftime('%Y_%m_%d_%H_%M_%S', tm_struct) + '.xls'
             df.to_excel(filename)
+            trfg = 1
+            qr_codes = Post.objects.filter(NAME_B=request.GET.get("bank"))
+            for record in qr_codes:
+                if str(record.ROOT) not in codes:
+                    codes.append(str(record.ROOT))
             return render(request, 'includes/main2_dop.html',
-                          {'bank': str(request.GET['bank'])})
+                          {'bank': str(request.GET['bank']), 'plot': trfg, 'codes': codes})
     except Exception as e:
         print(e)
         traceback.print_exc(file=sys.stdout)

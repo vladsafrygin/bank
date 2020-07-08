@@ -6,6 +6,8 @@
 </head>
 <body>
 <h1>Отчетность по банку:{{bank}} загружена</h1>
+<br>
+<h1>Отчетность по данному банку содержит следующие коды:{{ codes }}</h1>
 <form action="{% url 'graphic' %}" method="GET">
         {% csrf_token %}
     <input type="text" name="graphic" placeholder="Введите код показателя"><br>
